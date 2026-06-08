@@ -1,11 +1,11 @@
 const express = require("express");
-const cors = require('cors')
+const cors = require("cors");
 const app = express();
 const port = 5000;
 require("dotenv").config();
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -30,12 +30,37 @@ async function run() {
 
     const database = client.db("nexushire_db");
     const jobCollection = database.collection("jobs");
+    const companyCollection = database.collection("companies");
 
-    app.post('/api/jobs',async (req,res) => {
-        const job = req.body
-        const result = await jobCollection.insertOne(job)
-        res.send(result)
-    })
+    app.post("/api/jobs", async (req, res) => {
+      const job = req.body;
+      const result = await jobCollection.insertOne(job);
+      res.json(result);
+    });
+
+    app.get("/api/jobs", async (req, res) => {
+      const query = {};
+      if (req.query.companyId) query.companyId = req.query.companyId;
+      if (req.query.status) query.status = req.query.status;
+
+      const cursor = jobCollection.find(query);
+      const result = await cursor.toArray();
+      res.json(result);
+    });
+
+    app.post("/api/companies", async (req, res) => {
+      const company = req.body;
+      const result = await companyCollection.insertOne(company);
+      res.json(result);
+    });
+
+    app.get("/api/my/companies", async (req, res) => {
+      const query = {};
+      if (req.query.recruiterId) query.recruiterId = req.query.recruiterId;
+      const result = await companyCollection.findOne(query)
+      console.log(result)
+      res.json(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
