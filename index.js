@@ -31,6 +31,7 @@ async function run() {
     const database = client.db("nexushire_db");
     const jobCollection = database.collection("jobs");
     const companyCollection = database.collection("companies");
+    const applicationsCollection = database.collection("applications")
 
     app.post("/api/jobs", async (req, res) => {
       const job = req.body;
@@ -78,6 +79,25 @@ async function run() {
       console.log(result);
       res.json(result);
     });
+
+    app.post('/api/applications', async (req,res) => {
+      const application = req.body
+      const newApplication = {
+        ...application,
+        createdAt : new Date()
+      }
+      const result = await applicationsCollection.insertOne(newApplication)
+      res.json(result)
+    })
+
+    app.get('/api/applications', async (req,res)=> {
+      const query = {}
+      if(req.query.applicantId) query.applicantId = req.query.applicantId
+      if(req.query.jobId) query.jobId = req.query.jobId
+      const cursor = applicationsCollection.find(query)
+      const result = await cursor.toArray()
+      res.json(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
