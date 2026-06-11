@@ -32,6 +32,9 @@ async function run() {
     const jobCollection = database.collection("jobs");
     const companyCollection = database.collection("companies");
     const applicationsCollection = database.collection("applications")
+    const planCollection = database.collection("plans")
+    const subscriptionCollection = database.collection("subscriptions")
+    const usersCollection = database.collection("user")
 
     app.post("/api/jobs", async (req, res) => {
       const job = req.body;
@@ -98,6 +101,44 @@ async function run() {
       const result = await cursor.toArray()
       res.json(result)
     })
+
+
+    // admin can post plans , should add app.post api plan here 
+
+
+    app.get('/api/plans', async (req,res)=> {
+      const query = {}
+      if(req.query.plan_id) query.plan_id = req.query.plan_id;
+      const result = await planCollection.findOne(query)
+      console.log(result)
+      res.json(result)
+    })  
+
+    app.post('/api/subscriptions',async(req,res)=>{
+      const data = req.body
+      const subsInfo = {
+        ...data,
+        createdAt : new Date()
+      }
+      const result = await subscriptionCollection.insertOne(subsInfo)
+
+      const filter = {email : data.email}
+
+      const updateDocument = {
+        $set : {
+          plan : data.planId
+        }
+      }
+
+      const updateResult = await usersCollection.updateOne(filter,updateDocument)
+
+      const resultObj = {
+        result : result,
+        updateResult : updateResult
+      }
+      res.json(resultObj)
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
